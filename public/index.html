@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kollywoodle | Daily Tamil Cinema Mystery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0c0b0e;
+      --card-bg: #15131a;
+      --card-border: #262230;
+      --accent: #e5a93c;
+      --accent-glow: rgba(229, 169, 60, 0.25);
+      --text: #f3effa;
+      --muted: #8b8599;
+      --green: #2ecc71;
+      --yellow: #f1c40f;
+      --red: #e74c3c;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem 1rem 3rem;
+    }
+
+    header {
+      width: 100%;
+      max-width: 760px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--card-border);
+      margin-bottom: 1.5rem;
+    }
+
+    .brand h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.75rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: var(--accent);
+      text-shadow: 0 0 15px var(--accent-glow);
+    }
+    .brand p { font-size: 0.8rem; color: var(--muted); }
+
+    .date-selector select {
+      background: var(--card-bg);
+      color: var(--accent);
+      border: 1px solid var(--card-border);
+      padding: 0.5rem 0.8rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .instruction-bar {
+      max-width: 760px;
+      width: 100%;
+      background: rgba(229, 169, 60, 0.08);
+      border: 1px dashed rgba(229, 169, 60, 0.35);
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      color: #dfd8c7;
+      margin-bottom: 1.5rem;
+      line-height: 1.4;
+    }
+
+    /* Movies Board */
+    .film-grid {
+      width: 100%;
+      max-width: 760px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .film-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .film-card.revealed {
+      border-color: rgba(46, 204, 113, 0.4);
+      background: linear-gradient(180deg, #18201b 0%, #15131a 100%);
+    }
+
+    .film-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .film-title-box {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-weight: 700;
+      border-radius: 6px;
+      padding: 0.25rem 0.5rem;
+    }
+
+    .film-title-hidden {
+      background: #1f1b26;
+      color: #635c75;
+      letter-spacing: 3px;
+      width: 100%;
+      user-select: none;
+    }
+
+    .film-title-revealed {
+      color: #2ecc71;
+      font-size: 1.05rem;
+      animation: popIn 0.4s ease;
+    }
+
+    .film-genres {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+    }
+    .badge {
+      background: #231f2d;
+      color: #a49cb5;
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    /* Guess Section */
+    .guess-box {
+      width: 100%;
+      max-width: 500px;
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      padding: 0.85rem 1rem;
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+      transition: border 0.2s;
+    }
+    input[type="text"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    button.btn-guess {
+      background: var(--accent);
+      color: #0c0b0e;
+      border: none;
+      padding: 0 1.25rem;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+
+    /* Autocomplete list */
+    .autocomplete-list {
+      position: absolute;
+      top: calc(100% + 5px);
+      left: 0;
+      right: 0;
+      background: #1a1722;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      max-height: 220px;
+      overflow-y: auto;
+      z-index: 50;
+      list-style: none;
+      display: none;
+    }
+    .autocomplete-list li {
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      border-bottom: 1px solid #231f2d;
+      font-size: 0.9rem;
+    }
+    .autocomplete-list li:hover {
+      background: var(--accent);
+      color: #000;
+    }
+
+    /* Guess History */
+    .history {
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .history-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      animation: slideUp 0.3s ease;
+    }
+    .history-card .actor-name { font-weight: 600; }
+    .age-badge {
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+    .age-exact { background: rgba(46, 204, 113, 0.2); color: var(--green); border: 1px solid var(--green); }
+    .age-close { background: rgba(241, 196, 15, 0.2); color: var(--yellow); border: 1px solid var(--yellow); }
+    .age-far { background: rgba(231, 76, 60, 0.2); color: var(--red); border: 1px solid var(--red); }
+
+    /* Win Banner */
+    .victory-modal {
+      display: none;
+      background: linear-gradient(135deg, rgba(229,169,60,0.2) 0%, rgba(21,19,26,0.95) 100%);
+      border: 2px solid var(--accent);
+      border-radius: 16px;
+      padding: 1.5rem;
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.9); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes slideUp {
+      0% { transform: translateY(10px); opacity: 0; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <h1>KOLLYWOODLE</h1>
+      <p>The Daily Tamil Cinema Mystery</p>
+    </div>
+    <div class="date-selector">
+      <select id="archiveDropdown" onchange="switchDay(this.value)">
+        <option value="">📅 Catch up Days</option>
+      </select>
+    </div>
+  </header>
+
+  <div class="instruction-bar">
+    🕵️ <strong>Rules:</strong> Guess the mystery Tamil star! Each wrong guess checks against all 6 movies—if your guessed actor was also in that movie, its title unlocks. Age indicators hint if you're older or younger.
+  </div>
+
+  <div class="victory-modal" id="winCard">
+    <h2 style="color:var(--accent); font-family:'Cinzel', serif; margin-bottom: 0.5rem;">🎉 MASS-U CONGRATULATIONS!</h2>
+    <p id="winSubtext" style="font-size: 0.95rem; margin-bottom: 1rem;">You cracked today's mystery actor!</p>
+    <button class="btn-guess" onclick="copyShare()" style="padding: 0.75rem 1.5rem;">📋 Share Score</button>
+  </div>
+
+  <div class="film-grid" id="filmGrid">
+    <!-- Populated by JavaScript -->
+  </div>
+
+  <div class="guess-box">
+    <div class="input-row">
+      <input type="text" id="guessInput" placeholder="Type Tamil actor name (e.g. Vijay, Trisha)..." autocomplete="off" />
+      <button class="btn-guess" onclick="submitGuess()">Guess</button>
+    </div>
+    <ul class="autocomplete-list" id="autocompleteBox"></ul>
+  </div>
+
+  <div class="history" id="guessHistory">
+    <!-- Past guesses populate here -->
+  </div>
+
+  <script>
+    let currentGame = null;
+    let guesses = [];
+    let revealedFilms = new Set();
+    let gameOver = false;
+
+    // Common Kollywood Roster for fast Autocomplete
+    const ACTORS_DB = [
+      { name: "Vijay", age: 52 },
+      { name: "Rajinikanth", age: 76 },
+      { name: "Kamal Haasan", age: 72 },
+      { name: "Ajith Kumar", age: 55 },
+      { name: "Suriya", age: 51 },
+      { name: "Dhanush", age: 43 },
+      { name: "Vikram", age: 60 },
+      { name: "Sivakarthikeyan", age: 41 },
+      { name: "Vijay Sethupathi", age: 48 },
+      { name: "Karthi", age: 49 },
+      { name: "Silambarasan TR", age: 43 },
+      { name: "Nayanthara", age: 42 },
+      { name: "Trisha Krishnan", age: 43 },
+      { name: "Samantha Ruth Prabhu", age: 39 },
+      { name: "Vadivelu", age: 66 },
+      { name: "Fahadh Faasil", age: 44 },
+      { name: "Prakash Raj", age: 61 },
+      { name: "Nassar", age: 68 },
+      { name: "Anirudh Ravichander", age: 36 },
+      { name: "Santhanam", age: 46 }
+    ];
+
+    async function init() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const targetDate = urlParams.get('date') || new Date().toISOString().split('T')[0];
+
+      // Load Archive list
+      try {
+        const archRes = await fetch('daily/archive_index.json');
+        if (archRes.ok) {
+          const list = await archRes.json();
+          const dropdown = document.getElementById('archiveDropdown');
+          dropdown.innerHTML = '<option value="">📅 Archive / Catch-up</option>';
+          list.reverse().forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d;
+            opt.innerText = d === targetDate ? `★ ${d} (Today)` : d;
+            if (d === targetDate) opt.selected = true;
+            dropdown.appendChild(opt);
+          });
+        }
+      } catch(e) { console.log('Archive index loading...'); }
+
+      // Load specific day's puzzle
+      try {
+        const res = await fetch(`daily/${targetDate}.json`);
+        if (!res.ok) throw new Error("File not ready yet");
+        currentGame = await res.json();
+        renderBoard();
+      } catch (err) {
+        // Fallback demo data so you can test right away
+        currentGame = {
+          date: targetDate,
+          actor: { name: "Vijay", age: 52 },
+          movies: [
+            { id: "1", title: "Ghilli", year: 2004, rating: 8.2, genres: ["Action", "Romance"], cast: ["Vijay", "Trisha Krishnan", "Prakash Raj"] },
+            { id: "2", title: "Thuppakki", year: 2012, rating: 8.1, genres: ["Action", "Thriller"], cast: ["Vijay", "Kajal Aggarwal", "Vidyut Jammwal"] },
+            { id: "3", title: "Kaththi", year: 2014, rating: 8.1, genres: ["Action", "Drama"], cast: ["Vijay", "Samantha Ruth Prabhu", "Neil Nitin Mukesh"] },
+            { id: "4", title: "Mersal", year: 2017, rating: 7.6, genres: ["Action", "Thriller"], cast: ["Vijay", "Samantha Ruth Prabhu", "Nithya Menen", "Vadivelu"] },
+            { id: "5", title: "Master", year: 2021, rating: 7.8, genres: ["Action", "Crime"], cast: ["Vijay", "Vijay Sethupathi", "Malavika Mohanan"] },
+            { id: "6", title: "Leo", year: 2023, rating: 7.2, genres: ["Action", "Drama"], cast: ["Vijay", "Trisha Krishnan", "Sanjay Dutt"] }
+          ]
+        };
+        renderBoard();
+      }
+    }
+
+    function renderBoard() {
+      const grid = document.getElementById('filmGrid');
+      grid.innerHTML = '';
+      currentGame.movies.forEach((m, idx) => {
+        const isRevealed = revealedFilms.has(idx);
+        const card = document.createElement('div');
+        card.className = `film-card ${isRevealed ? 'revealed' : ''}`;
+        card.innerHTML = `
+          <div class="film-meta">
+            <span>📅 ${m.year}</span>
+            <span>⭐ ${m.rating}</span>
+          </div>
+          <div class="film-title-box">
+            <span class="${isRevealed ? 'film-title-revealed' : 'film-title-hidden'}">
+              ${isRevealed ? m.title : '••••••••••••'}
+            </span>
+          </div>
+          <div class="film-genres">
+            ${m.genres.map(g => `<span class="badge">${g}</span>`).join('')}
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function submitGuess(chosenName = null) {
+      if (gameOver) return;
+      const input = document.getElementById('guessInput');
+      const val = (chosenName || input.value).trim();
+      if (!val) return;
+
+      const actorMeta = ACTORS_DB.find(a => a.name.toLowerCase() === val.toLowerCase()) || { name: val, age: null };
+
+      // Check crossover in the 6 movies
+      let unlockedNow = 0;
+      currentGame.movies.forEach((m, idx) => {
+        if (!revealedFilms.has(idx)) {
+          const match = m.cast.some(actor => actor.toLowerCase().includes(val.toLowerCase()));
+          if (match) {
+            revealedFilms.add(idx);
+            unlockedNow++;
+          }
+        }
+      });
+
+      // Age calculation
+      let ageStatus = 'age-far';
+      let ageText = 'Age Unknown';
+      if (actorMeta.age && currentGame.actor.age) {
+        const diff = actorMeta.age - currentGame.actor.age;
+        if (diff === 0) {
+          ageStatus = 'age-exact';
+          ageText = `🎯 ${actorMeta.age} yrs (Exact)`;
+        } else if (Math.abs(diff) <= 10) {
+          ageStatus = 'age-close';
+          ageText = `${diff > 0 ? '▼ Older by' : '▲ Younger by'} ${Math.abs(diff)}y`;
+        } else {
+          ageStatus = 'age-far';
+          ageText = `${diff > 0 ? '▼ Much Older' : '▲ Much Younger'}`;
+        }
+      }
+
+      // Check Win
+      const isWinner = val.toLowerCase() === currentGame.actor.name.toLowerCase();
+      if (isWinner) {
+        // Unlock all movies on win
+        currentGame.movies.forEach((_, idx) => revealedFilms.add(idx));
+        gameOver = true;
+        document.getElementById('winCard').style.display = 'block';
+        document.getElementById('winSubtext').innerText = `You found ${currentGame.actor.name} in ${guesses.length + 1} guesses!`;
+      }
+
+      // Add to history
+      guesses.unshift({ name: actorMeta.name, ageStatus, ageText, unlockedNow, isWinner });
+      renderHistory();
+      renderBoard();
+
+      input.value = '';
+      document.getElementById('autocompleteBox').style.display = 'none';
+    }
+
+    function renderHistory() {
+      const container = document.getElementById('guessHistory');
+      container.innerHTML = guesses.map(g => `
+        <div class="history-card" style="${g.isWinner ? 'border-color:var(--green); background:rgba(46,204,113,0.1)' : ''}">
+          <div>
+            <div class="actor-name">${g.isWinner ? '🏆 ' : ''}${g.name}</div>
+            <div style="font-size:0.75rem; color:var(--muted); margin-top:2px;">
+              ${g.unlockedNow > 0 ? `🔓 Unlocked ${g.unlockedNow} movie title(s)!` : 'No titles unlocked'}
+            </div>
+          </div>
+          <span class="age-badge ${g.ageStatus}">${g.ageText}</span>
+        </div>
+      `).join('');
+    }
+
+    // Autocomplete listeners
+    const input = document.getElementById('guessInput');
+    const autoBox = document.getElementById('autocompleteBox');
+
+    input.addEventListener('input', (e) => {
+      const val = e.target.value.toLowerCase().trim();
+      if (!val) { autoBox.style.display = 'none'; return; }
+      const matches = ACTORS_DB.filter(a => a.name.toLowerCase().includes(val));
+      if (matches.length === 0) { autoBox.style.display = 'none'; return; }
+      autoBox.innerHTML = matches.map(m => `<li>${m.name}</li>`).join('');
+      autoBox.style.display = 'block';
+    });
+
+    autoBox.addEventListener('click', (e) => {
+      if (e.target.tagName === 'LI') {
+        submitGuess(e.target.innerText);
+      }
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') submitGuess();
+    });
+
+    function switchDay(dateVal) {
+      if (dateVal) window.location.search = `?date=${dateVal}`;
+    }
+
+    function copyShare() {
+      const text = `🎬 Kollywoodle (${currentGame.date})\n👤 Solved in ${guesses.length} guesses!\nPlay: ${window.location.href}`;
+      navigator.clipboard.writeText(text);
+      alert('Score copied to clipboard!');
+    }
+
+    init();
+  </script>
+</body>
+</html>
